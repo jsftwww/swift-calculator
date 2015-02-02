@@ -12,21 +12,54 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var display: UILabel!;
     var userHasBegunTyping = false;
-    
+    var operandStack = [Double]();
+    var displayValue: Double {
+        get {
+            return NSNumberFormatter().numberFromString(display.text!)!.doubleValue;
+        }
+        set {
+            display.text = "\(newValue)";
+            userHasBegunTyping = false;
+        }
+    }
+
     @IBAction func appendDigit(sender: UIButton) {
         let digit = sender.currentTitle!;
         
         if (userHasBegunTyping) {
-            (display.text)! += digit;
+            display.text = display.text! + digit;
         } else {
             display.text = digit;
             userHasBegunTyping = true;
         }
     }
     
-    @IBAction func clear() {
-        display.text = "0";
+    @IBAction func enter() {
         userHasBegunTyping = false;
+        operandStack.append(displayValue);
+        println(operandStack);
     }
     
+    @IBAction func operate(sender: UIButton) {
+        let operation = sender.currentTitle!;
+        if (userHasBegunTyping) {
+            enter();
+        }
+        
+        switch operation {
+            case "✖️": performOperation { $0 * $1 }
+            case "➗": performOperation { $1 / $0 }
+            case "➕": performOperation { $0 + $1 }
+            case "➖": performOperation { $1 - $0 }
+            default: break;
+            
+        }
+    }
+    
+    func performOperation(operation: (Double, Double) -> Double) {
+        if (operandStack.count >= 2) {
+            displayValue = operation(operandStack.removeLast(), operandStack.removeLast());
+            enter();
+        }
+    }
 }
